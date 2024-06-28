@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/get_navigation.dart';
 
+import '../elements/firestore_contacts.dart';
+
 class chatPage extends StatefulWidget{
   @override
   State<chatPage> createState() => _chatPageState();
@@ -44,7 +46,12 @@ class _chatPageState extends State<chatPage> {
             child:Icon(Icons.camera_alt,color: Colors.white,),
           ),
 
-          Container(
+    GestureDetector(
+    onTap: (){
+    Get.off(RegisteredUsersList());
+    },
+    //_getContacts,
+    child:Container(
             margin: EdgeInsets.only(right: 10), // Optional: margin to the right
             padding: EdgeInsets.all(8), // Padding inside the container
             decoration: BoxDecoration(
@@ -56,7 +63,7 @@ class _chatPageState extends State<chatPage> {
               color: Colors.white, // Color of the icon
             ),
           ),
-        ],
+    )],
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),

@@ -22,7 +22,6 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
 
   File? _image;
   final ImagePicker _picker = ImagePicker();
-  final TextEditingController _controller = TextEditingController();
 
   Future<void> _pickImage(ImageSource source) async {
     try {
@@ -191,6 +190,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(backgroundColor: Colors.greenAccent),
                     onPressed: () {
+                      _storeUserDetailsData();
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => BottomNavigationBarExample()),
@@ -262,7 +262,10 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
     User? user = _auth.currentUser;
     if (user != null) {
       await _firestore.collection('user').doc(user.uid).set({
-        'uid': user.uid,
+        'uid' : user.uid,
+        'name': name,
+        'Username': Username,
+        'about' : about,
         'phoneNumber': user.phoneNumber,
         'createdAt': FieldValue.serverTimestamp(),
       });

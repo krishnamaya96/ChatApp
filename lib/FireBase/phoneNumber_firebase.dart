@@ -102,7 +102,7 @@ class VerifyPhoneNumber {
     User? user = _auth.currentUser;
     if (user != null) {
       await _firestore.collection('user').doc(user.uid).set({
-        'name' : user.photoURL,
+        'photo' : user.photoURL,
         'uid': user.uid,
         'phoneNumber': user.phoneNumber,
         'createdAt': FieldValue.serverTimestamp(),
