@@ -10,6 +10,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 
+import '../../Screen/mobile_verification.dart';
 import '../../Screen/spalsh_screen.dart';
 
 class DeleteAccount extends StatefulWidget{
@@ -67,6 +68,16 @@ class _DeleteAccountState extends State<DeleteAccount> {
         print("User account deleted successfully");
       } catch (e) {
         if (e is FirebaseAuthException && e.code == 'requires-recent-login') {
+          Fluttertoast.showToast(
+            msg: "Reauthentication Required:",
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.CENTER,
+            backgroundColor: Colors.black,
+            textColor: Colors.white,
+            fontSize: 16.0,
+          );
+
+          Navigator.of(context).push(MaterialPageRoute(builder: (context) => MobileVerification (),));
           // The user's credential is too old and they need to log in again
           // Handle re-authentication here
           print("Re-authentication required");

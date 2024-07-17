@@ -6,6 +6,7 @@ import '../Screen/individual_chat.dart';
 import '../chat_page_one.dart';
 import '../webSocket/web_socket.dart';
 import '../webSocket/web_socket_service_factory.dart';
+import 'bottom_nav.dart';
 
 class RegisteredUsersList extends StatelessWidget {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -26,8 +27,13 @@ class RegisteredUsersList extends StatelessWidget {
   Future<WebSocketService> initializeWebSocketService(String roomName,) async {
     String uid = await getCurrentUserUid();
     WebSocketService webSocketService = createWebSocketService('ws://127.0.0.1:8000/ws/chat/$roomName/');
+    print("room name is: $roomName");
     return webSocketService;
   }
+
+  // String generateRoomName(String user1, String user2) {
+  //   return 'chat_${user1.compareTo(user2) < 0 ? user1 + '_' + user2 : user2 + '_' + user1}';
+  // }
 
   String getRoomName(String uid1, String uid2) {
     List<String> uids = [uid1, uid2];
@@ -45,8 +51,10 @@ class RegisteredUsersList extends StatelessWidget {
       appBar: AppBar(
         leading: IconButton(
           onPressed: () {
-            Navigator.pop(context);
-          },
+                   Navigator.push(
+                   context, MaterialPageRoute(builder: (context) =>  BottomNavigationBarExample()),);
+             },
+
           icon: Icon(Icons.arrow_back_ios),),
         title: Text('Contacts',style: TextStyle(fontWeight: FontWeight.bold),),
       ),
@@ -159,6 +167,7 @@ class RegisteredUsersList extends StatelessWidget {
   void navigateToChatPage(BuildContext context, String selectedUserUid,  String selectedUserName) async {
     String currentUserUid = await getCurrentUserUid();
     String roomName = getRoomName(currentUserUid, selectedUserUid);
+    print("room name of send rec: $roomName");
 
     WebSocketService webSocketService = await initializeWebSocketService(roomName);
 
@@ -167,8 +176,8 @@ class RegisteredUsersList extends StatelessWidget {
       MaterialPageRoute(
         builder: (context) => WebSocketExamplePage(
           webSocketService: webSocketService,
-          selectedUserUid: selectedUserUid,
           currentUserUid: currentUserUid,
+          selectedUserUid: selectedUserUid,
           selectedUserName: selectedUserName,
         ),
       ),

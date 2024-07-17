@@ -7,6 +7,8 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+
+
 def localProperties = new Properties()
 def localPropertiesFile = rootProject.file('local.properties')
 if (localPropertiesFile.exists()) {
@@ -14,6 +16,7 @@ if (localPropertiesFile.exists()) {
         localProperties.load(reader)
     }
 }
+
 
 def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
 if (flutterVersionCode == null) {
@@ -42,6 +45,7 @@ android {
     sourceSets {
         main.java.srcDirs += 'src/main/kotlin'
     }
+
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).

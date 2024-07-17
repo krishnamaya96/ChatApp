@@ -4,17 +4,21 @@ import 'package:chat_app/Screen/call_page.dart';
 import 'package:chat_app/Screen/chat_page.dart';
 import 'package:chat_app/Screen/settings_page.dart';
 import 'package:chat_app/Screen/update_page.dart';
+import 'package:chat_app/webSocket/web_socket.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class BottomNavigationBarExample extends StatefulWidget {
 
+
   static  final List<Widget> _widgetOptions = [
       updatePage(),
       callPage(),
-      chatPage(),
+      ChatPage(),
       settingPage()
   ];
+
+  const BottomNavigationBarExample({super.key});
 
   @override
   State<BottomNavigationBarExample> createState() => _BottomNavigationBarExampleState();

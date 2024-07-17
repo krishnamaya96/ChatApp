@@ -122,7 +122,8 @@ class _callPageState extends State<callPage> {
 
           GestureDetector(
             onTap: (){
-              Get.off(RegisteredUsersList());
+              _getContacts();
+              //Get.off(RegisteredUsersList());
             },
             //_getContacts,
             child: Container(

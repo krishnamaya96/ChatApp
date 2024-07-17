@@ -123,7 +123,7 @@ class OtpPage extends GetView<LoginController>{
                                 child: Material(
                                   color:Colors.transparent,
                                   child: InkWell(
-                                    onTap: (){
+                                    onTap: () async{
                                       controller.verifyOtp();
                                       _storeUserData();
                                       //Get.off(chatPage());

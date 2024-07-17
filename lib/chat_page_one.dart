@@ -130,6 +130,8 @@
 
 import 'dart:convert';
 import 'package:chat_app/webSocket/web_socket.dart';
+import 'package:chat_app/webSocket/web_socket_service_factory.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:web_socket_channel/io.dart';
@@ -138,11 +140,16 @@ import 'package:web_socket_channel/io.dart';
 class WebSocketExamplePage extends StatefulWidget {
 
   final WebSocketService webSocketService;
-  final String selectedUserUid;
   final String currentUserUid;
+  final String selectedUserUid;
   final String selectedUserName;
 
-  WebSocketExamplePage({required this.webSocketService,required this.selectedUserUid,required this.currentUserUid,required this.selectedUserName,});
+  WebSocketExamplePage({
+    required this.webSocketService,
+    required this.currentUserUid,
+    required this.selectedUserUid,
+    required this.selectedUserName,});
+
   @override
   _ChatPageState createState() => _ChatPageState();
 }
@@ -151,35 +158,71 @@ class _ChatPageState extends State<WebSocketExamplePage> {
 
   final TextEditingController controller = TextEditingController();
   List<Map<String, dynamic>> messages = [];
-  late String currentUserUid;
-  late String selectedUserUid;
-  late WebSocketService _webSocketService;
+
+  String getRoomName(String uid1, String uid2) {
+    List<String> uids = [uid1, uid2];
+    uids.sort();
+    return uids.join('_');
+  }
+
 
   @override
   void initState() {
     super.initState();
-    initializeUids();
-    widget.webSocketService.connect(widget.selectedUserUid);
+    //initializeUids();
+    print('WebSocketService setup started...');
+    print('WebSocket URL: ${widget.webSocketService}');
+    print('Connecting to WebSocket...');
+    print('Initializing WebSocket connection...');
+    widget.webSocketService.connect(getRoomName(widget.currentUserUid, widget.selectedUserUid));
+    print('Connected to WebSocket with room: ${getRoomName(widget.currentUserUid, widget.selectedUserUid)}');
    // final String uid = FirebaseAuth.instance.currentUser!.uid;
+    print('Setting up message stream listener...');
+    print('WebSocketService setup complete.');
+    print('WebSocketService messagesStream: ${widget.webSocketService.messagesStream}');
     widget.webSocketService.messagesStream.listen((data) {
       print("Data received in stream: $data");
-      try {
-        final messageJson = json.decode(data);
-        final message = messageJson['message'];
-        final to = messageJson['to'];
-        final from = messageJson['from'];
-        print(from);
-        print("Received message from: $from to: $to message: $message");
-        print("Received message init: $messageJson");
-        if (to == widget.currentUserUid) {
-        setState(() {
-          messages.add({'message': message, 'isSent': false});
-        });
-      } }catch (e) {
-        print('Error decoding message: $e');
-      }
+      // try {
+      //   print("Attempting to decode JSON...");
+      // //  final messageJson = json.decode(data);
+      //   //print("Decoded JSON: $messageJson");
+      //   final message = data['message'];
+      //   final from = data['from'];
+      //   final to = data['to'];
+      //
+      //   print('From: $from');
+      //   print('Message: $message');
+      //   print('To: $to');
+      //
+      //   print('Decoded message: $message');
+      //   print('Message to: $to from: $from');
+      //   print("Received message from: $from to: $to message: $message");
+      //  // print("Received message init: $messageJson");
+      // //   if (to == widget.selectedUserUid) {
+      // //   setState(() {
+      // //     messages.add({'message': message, 'isSent': false});
+      // //   });
+      // // }
+      //
+      //   if ((to == widget.currentUserUid && from == widget.selectedUserUid) ||
+      //       (from == widget.currentUserUid && to == widget.selectedUserUid)) {
+      //     setState(() {
+      //       messages.add({'message': message, 'isSent': from == widget.currentUserUid});
+      //     });
+      //   }
+      //   // Save the message to Firestore
+      //   saveMessageToFirestore(message, from, to);
+      // }
+      // catch (e) {
+      //   print('Error decoding message: $e');
+      // }
     });
+    print('Message stream listener setup complete.');
 
+
+
+    // Load previous messages from Firestore
+    loadMessagesFromFirestore();
 
   }
 
@@ -192,11 +235,54 @@ class _ChatPageState extends State<WebSocketExamplePage> {
     }
   }
 
-  Future<void> initializeUids() async {
-    currentUserUid = await getCurrentUserUid();
-    // Assume selectedUserUid is passed or set somewhere in your code
-    // For example, you can pass it through the constructor
-    selectedUserUid = widget.selectedUserUid;
+
+  // void saveMessageToFirestore(String message, String from, String to) {
+  //   final roomName = getRoomName(widget.currentUserUid, widget.selectedUserUid);
+  //   FirebaseFirestore.instance.collection('chatRooms').doc(roomName).collection('messages').add({
+  //     'message': message,
+  //     'from': from,
+  //     'to': to,
+  //     'timestamp': Timestamp.now(),
+  //   });
+  // }
+
+  void saveMessageToFirestore(String message, String from, String to) {
+    final roomName = getRoomName(from, to);
+    final chatRoomRef = FirebaseFirestore.instance.collection('chatRooms').doc(roomName);
+
+    // Add message to the messages sub-collection
+    chatRoomRef.collection('messages').add({
+      'message': message,
+      'from': from,
+      'to': to,
+      'timestamp': Timestamp.now(),
+    });
+
+    // Update the last message and timestamp at the chat room level
+    chatRoomRef.set({
+      'lastMessage': message,
+      'lastMessageTimestamp': Timestamp.now(),
+    }, SetOptions(merge: true));
+  }
+
+
+  void loadMessagesFromFirestore() {
+    final roomName = getRoomName(widget.currentUserUid, widget.selectedUserUid);
+    FirebaseFirestore.instance
+        .collection('chatRooms')
+        .doc(roomName)
+        .collection('messages')
+        .orderBy('timestamp')
+        .snapshots()
+        .listen((snapshot) {
+      setState(() {
+        messages = snapshot.docs.map((doc) => {
+          'message': doc['message'],
+          'isSent': doc['from'] == widget.currentUserUid,
+          'senderName': doc['from'] == widget.currentUserUid ? 'You' : widget.selectedUserName,
+        }).toList();
+      });
+    });
   }
 
 
@@ -211,6 +297,7 @@ class _ChatPageState extends State<WebSocketExamplePage> {
               itemCount: messages.length,
               itemBuilder: (context, index) {
                 final message = messages[index];
+                print("hellooo$message");
                 return Align(
                   alignment: message['isSent'] ? Alignment.centerRight : Alignment.centerLeft,
                   child: Container(
@@ -241,13 +328,21 @@ class _ChatPageState extends State<WebSocketExamplePage> {
                   onPressed: () {
                     if (controller.text.isNotEmpty) {
                       final message = controller.text;
-                      final messageObj = json.encode({'message': message,'to': widget.selectedUserUid,'from': widget.currentUserUid});
-                      print("Sending message: $messageObj");
+                      final messageObj = jsonEncode({'message': message,'to': widget.selectedUserUid,'from': widget.currentUserUid});
+                     print("Sending message: $messageObj");
+                      final to = widget.selectedUserUid;
+                      final from =  widget.currentUserUid;
+                      print(to);
+                      print(from);
 
-                      widget.webSocketService.sendMessage(messageObj);
-                      setState(() {
-                        messages.add({'message': message, 'isSent': true});
-                      });
+                      widget.webSocketService.sendMessage(messageObj,from,to);
+
+                      // Save the message to Firestore (this will trigger the Firestore listener)
+                      saveMessageToFirestore(message, widget.currentUserUid, widget.selectedUserUid);
+
+                      // setState(() {
+                      //   messages.add({'message': message, 'isSent': true});
+                      // });
                       controller.clear();
                     }
                   },

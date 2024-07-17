@@ -44,45 +44,60 @@
 // WebSocketServiceBase createWebSocketService() => WebSocketServiceNonWeb();
 
 
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:chat_app/webSocket/web_socket.dart';
 import 'package:web_socket_channel/io.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 
 class WebSocketServiceNonWeb extends WebSocketServiceImpl {
-  late IOWebSocketChannel _channel;
+  late WebSocketChannel _channel;
+  late String roomName;
+  final _messageController = StreamController<Map<String, dynamic>>.broadcast();
 
   WebSocketServiceNonWeb(String serverUrl) {
-    _channel = IOWebSocketChannel.connect(serverUrl);
-    _channel.stream.listen((message) {
-      print("Data received in WebSocket: $message");
-      try {
-        final decodedMessage = jsonDecode(message);
-        if (decodedMessage.containsKey('message')) {
-          addMessage(decodedMessage['message']);
-        } else {
-          print('Received message format is invalid: $message');
+    _channel = WebSocketChannel.connect(Uri.parse(serverUrl));
+    _channel.stream.listen((event) {
+      if (event is String) {
+        try {
+          final decodedMessage = jsonDecode(event);
+          if (decodedMessage is Map<String, dynamic>) {
+            _messageController.add(decodedMessage);
+          } else {
+            print('Error: Decoded message is not a map');
+          }
+        } catch (e) {
+          print('Error decoding message: $e');
         }
-      } catch (e) {
-        print('Error decoding message: $e');
+      } else {
+        print('Received unsupported message format: $event');
       }
-
-      //addMessage(message);
     });
   }
 
   @override
-  void sendMessage(String message) {
-    final jsonMessage = jsonEncode({'message': message});
-   // final jsonMessage = jsonEncode({'message': message});
+  void connect(String roomName) {
+    print('Joining room: $roomName');
+    _channel.sink.add(jsonEncode({'join': roomName}));
+  }
+
+  @override
+  void sendMessage(String message, String from, String to) {
+    final jsonMessage = json.encode({'message': message, 'from': from, 'to': to});
+    print('Sending message: $jsonMessage');
     _channel.sink.add(jsonMessage);
   }
 
   @override
-  void close() {
+  void disconnect() {
+    print('Closing WebSocket connection');
     _channel.sink.close();
-    super.close();
   }
+
+
+  @override
+  Stream<dynamic>? get stream => _messageController.stream;
 }
 

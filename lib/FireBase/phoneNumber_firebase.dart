@@ -9,6 +9,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../Controller/userController_get.dart';
+
 class VerifyPhoneNumber {
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -19,7 +21,9 @@ class VerifyPhoneNumber {
       await FirebaseAuth.instance.verifyPhoneNumber(
         phoneNumber: number,
         verificationCompleted: (PhoneAuthCredential credential) async {
+          print(credential);
           await FirebaseAuth.instance.signInWithCredential(credential);
+          print(credential);
           print('Phone number automatically verified and user signed in: ${FirebaseAuth.instance.currentUser}');
         },
         verificationFailed: (FirebaseAuthException e) {
@@ -36,6 +40,7 @@ class VerifyPhoneNumber {
         },
         codeSent: (String verificationId, int? resendToken) async {
           SharedPreferences preferences = await SharedPreferences.getInstance();
+          print(preferences);
           await preferences.setString("verificationId", verificationId);
           Get.to(() => OtpPage());
           print('Verification code sent to $number');
@@ -61,6 +66,7 @@ class VerifyPhoneNumber {
   Future<void> verifyOtp(String otp, VoidCallback onSuccess, VoidCallback onFailure) async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
     String? verificationId = preferences.getString("verificationId");
+    print(otp);
 
     if (verificationId == null) {
       Fluttertoast.showToast(
@@ -81,6 +87,15 @@ class VerifyPhoneNumber {
         smsCode: otp,
       );
       await FirebaseAuth.instance.signInWithCredential(phoneAuthCredential);
+    //   UserCredential userCredential =  await FirebaseAuth.instance.signInWithCredential(phoneAuthCredential);
+    //   if (userCredential.user != null) {
+    //     Get.find<UserController>().setCurrentUserId(userCredential.user!.uid);
+    //    // Get.to(YourBottomNavBarPage());
+    //   }
+
+    //  final UserController userController = Get.find();
+    //  userController.currentUserId.value = userCredential.user!.uid;
+      //Get.find<UserController>().setUserId(userCredential.user!.uid);
       print('OTP verified and user signed in.');
       onSuccess();
       _storeUserData();

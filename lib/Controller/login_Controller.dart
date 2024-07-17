@@ -72,6 +72,7 @@ import 'package:chat_app/Screen/chat_page.dart';
 import 'package:chat_app/Screen/get_user_data.dart';
 import 'package:chat_app/Screen/introduction_screen.dart';
 import 'package:chat_app/Screen/mobile_verification.dart';
+import 'package:chat_app/Screen/spalsh_screen.dart';
 import 'package:chat_app/Screen/update_page.dart';
 import 'package:chat_app/Screen/user_info.dart';
 import 'package:chat_app/Screen/welcome_page.dart';
@@ -81,6 +82,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
+
+import 'userController_get.dart';
 
 class LoginController extends GetxController {
   TextEditingController numberController = TextEditingController();
@@ -92,6 +95,28 @@ class LoginController extends GetxController {
   VerifyPhoneNumber verifyPhone = VerifyPhoneNumber();
   late String number;
   RxBool isLoading = RxBool(false);
+  static LoginController instance = Get.find();
+  late Rx<User?> _user;
+
+  // @override
+  // void onReady() {
+  //   super.onReady();
+  //   _user = Rx<User?>(auth.currentUser);
+  //   _user.bindStream(auth.userChanges());
+  //   ever(_user, _initialScreen);
+  // }
+  //
+  // _initialScreen(User? user) {
+  //   if (user == null) {
+  //     print('User is currently signed out!');
+  //     Get.offAll(() => SplashScreen());
+  //   } else {
+  //     print('User is signed in! UID: ${user.uid}');
+  //     UserController.instance.setCurrentUserId(user.uid);
+  //     Get.offAll(() => BottomNavigationBarExample());
+  //   }
+  // }
+
 
   @override
   void onClose() {
@@ -123,6 +148,7 @@ class LoginController extends GetxController {
         otpController.text,
             () {
           isLoading.value = false;
+         // Get.find<UserController>().setUserId(userCredential.user!.uid);
           Get.off(() => UserInfoScreen());
         },
             () {

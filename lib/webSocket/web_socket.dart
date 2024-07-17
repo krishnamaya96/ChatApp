@@ -72,9 +72,10 @@ import 'dart:async';
 
 abstract class WebSocketService {
   void connect(String roomName);
-  void sendMessage(String message);
+  void sendMessage(String message,String from, String to);
   Stream<dynamic> get messagesStream;
   void close();
+  void addMessage(dynamic message);
 }
 
 class WebSocketServiceImpl implements WebSocketService {
@@ -91,7 +92,7 @@ class WebSocketServiceImpl implements WebSocketService {
   }
 
   @override
-  void sendMessage(String message) {
+  void sendMessage(String message,String from, String to) {
     // Implement platform-specific sendMessage in the respective files
   }
 
